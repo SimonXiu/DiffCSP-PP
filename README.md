@@ -29,7 +29,8 @@ The ``<dataset>`` tag can be selected from perov_5, mp_20, mpts_52 and carbon_24
 #### Crystal Structure Prediction
 
 ```
-python scripts/evaluate.py --model_path <model_path> --dataset <dataset>
+python scripts/evaluate.py --model_path <model_path> --dataset <dataset> with GT Wyckoff positions
+python script/csp_from_template.py --model_path <csp model> --csv_path <path containing *_comp_fps.csv> --finder_model_path <CSPML model> # with CSPML templates
 python scripts/compute_metrics.py --root_path <model_path> --tasks csp --gt_file data/<dataset>/test.csv 
 ```
 
