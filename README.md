@@ -4,8 +4,16 @@ Official Implementation of Space Group Constrained Crystal Generation (DiffCSP++
 
 ### Setup
 
+Create a file called `.env` with the following correctly filled out
 ```
-bash setup/setup.sh
+PROJECT_ROOT="${THIS_FOLDER}"
+HYDRA_JOBS="${THIS_FOLDER}/results"
+WANDB_DIR="${THIS_FOLDER}"
+```
+
+```
+micromamba env create -f environment.yml
+micromamba activate diffcsp_pp
 ```
 
 ### Training

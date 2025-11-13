@@ -15,11 +15,11 @@ from pytorch_lightning.callbacks import (
     LearningRateMonitor,
     ModelCheckpoint,
 )
-from pytorch_lightning.loggers import WandbLogger
+# from pytorch_lightning.loggers import WandbLogger
 
 from diffcsp.common.utils import log_hyperparameters, PROJECT_ROOT
 
-import wandb
+# import wandb
 
 
 
@@ -79,7 +79,7 @@ def run(cfg: DictConfig) -> None:
         cfg.logging.wandb.mode = "offline"
 
     # Hydra run directory
-    hydra_dir = Path(HydraConfig.get().run.dir)
+    hydra_dir = Path(HydraConfig.get().runtime.output_dir)
 
     # Instantiate datamodule
     hydra.utils.log.info(f"Instantiating <{cfg.data.datamodule._target_}>")
@@ -109,20 +109,20 @@ def run(cfg: DictConfig) -> None:
 
     # Logger instantiation/configuration
     wandb_logger = None
-    if "wandb" in cfg.logging:
-        hydra.utils.log.info("Instantiating <WandbLogger>")
-        wandb_config = cfg.logging.wandb
-        wandb_logger = WandbLogger(
-            **wandb_config,
-            settings=wandb.Settings(start_method="fork"),
-            tags=cfg.core.tags,
-        )
-        hydra.utils.log.info("W&B is now watching <{cfg.logging.wandb_watch.log}>!")
-        wandb_logger.watch(
-            model,
-            log=cfg.logging.wandb_watch.log,
-            log_freq=cfg.logging.wandb_watch.log_freq,
-        )
+    # if "wandb" in cfg.logging:
+    #     hydra.utils.log.info("Instantiating <WandbLogger>")
+    #     wandb_config = cfg.logging.wandb
+    #     wandb_logger = WandbLogger(
+    #         **wandb_config,
+    #         settings=wandb.Settings(start_method="fork"),
+    #         tags=cfg.core.tags,
+    #     )
+    #     hydra.utils.log.info("W&B is now watching <{cfg.logging.wandb_watch.log}>!")
+    #     wandb_logger.watch(
+    #         model,
+    #         log=cfg.logging.wandb_watch.log,
+    #         log_freq=cfg.logging.wandb_watch.log_freq,
+    #     )
 
     # Store the YaML config separately into the wandb dir
     yaml_conf: str = OmegaConf.to_yaml(cfg=cfg)
@@ -152,15 +152,15 @@ def run(cfg: DictConfig) -> None:
     hydra.utils.log.info("Starting training!")
     trainer.fit(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
 
-    hydra.utils.log.info("Starting testing!")
-    trainer.test(datamodule=datamodule)
+    # hydra.utils.log.info("Starting testing!")
+    # trainer.test(datamodule=datamodule)
 
     # Logger closing to release resources/avoid multi-run conflicts
     if wandb_logger is not None:
         wandb_logger.experiment.finish()
 
 
-@hydra.main(config_path=str(PROJECT_ROOT / "conf"), config_name="default")
+@hydra.main(config_path=str(PROJECT_ROOT / "conf"), config_name="default", version_base="1.1")
 def main(cfg: omegaconf.DictConfig):
     run(cfg)
 
