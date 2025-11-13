@@ -35,27 +35,20 @@ def build_callbacks(cfg: DictConfig) -> List[Callback]:
             )
         )
 
-    if "early_stopping" in cfg.train:
-        hydra.utils.log.info("Adding callback <EarlyStopping>")
-        callbacks.append(
-            EarlyStopping(
-                monitor=cfg.train.monitor_metric,
-                mode=cfg.train.monitor_metric_mode,
-                patience=cfg.train.early_stopping.patience,
-                verbose=cfg.train.early_stopping.verbose,
-            )
-        )
-
     if "model_checkpoints" in cfg.train:
         hydra.utils.log.info("Adding callback <ModelCheckpoint>")
         callbacks.append(
             ModelCheckpoint(
-                dirpath=Path(HydraConfig.get().run.dir),
-                monitor=cfg.train.monitor_metric,
-                mode=cfg.train.monitor_metric_mode,
+                dirpath=Path(HydraConfig.get().runtime.output_dir),
+                # monitor=cfg.train.monitor_metric,
+                # mode=cfg.train.monitor_metric_mode,
+                monitor='epoch',    # monitor the epoch number
+                mode='max',  
                 save_top_k=cfg.train.model_checkpoints.save_top_k,
                 verbose=cfg.train.model_checkpoints.verbose,
                 save_last=cfg.train.model_checkpoints.save_last,
+                every_n_epochs=cfg.train.model_checkpoints.every_n_epochs,
+                save_on_train_epoch_end=cfg.train.model_checkpoints.save_on_train_epoch_end,
             )
         )
 
@@ -139,10 +132,10 @@ def run(cfg: DictConfig) -> None:
     ckpts = list(hydra_dir.glob('*.ckpt'))
     if len(ckpts) > 0:
         ckpt_epochs = np.array([int(ckpt.parts[-1].split('-')[0].split('=')[1]) for ckpt in ckpts])
-        ckpt = str(ckpts[ckpt_epochs.argsort()[-1]])
-        hydra.utils.log.info(f"found checkpoint: {ckpt}")
+        ckpt_path = str(ckpts[ckpt_epochs.argsort()[-1]])
+        hydra.utils.log.info(f"found checkpoint: {ckpt_path}")
     else:
-        ckpt = None
+        ckpt_path = None
           
     hydra.utils.log.info("Instantiating the Trainer")
     trainer = pl.Trainer(
@@ -151,15 +144,13 @@ def run(cfg: DictConfig) -> None:
         callbacks=callbacks,
         deterministic=cfg.train.deterministic,
         check_val_every_n_epoch=cfg.logging.val_check_interval,
-        progress_bar_refresh_rate=cfg.logging.progress_bar_refresh_rate,
-        resume_from_checkpoint=ckpt,
         **cfg.train.pl_trainer,
     )
 
     log_hyperparameters(trainer=trainer, model=model, cfg=cfg)
 
     hydra.utils.log.info("Starting training!")
-    trainer.fit(model=model, datamodule=datamodule)
+    trainer.fit(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
 
     hydra.utils.log.info("Starting testing!")
     trainer.test(datamodule=datamodule)
