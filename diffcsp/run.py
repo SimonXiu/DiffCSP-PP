@@ -15,12 +15,12 @@ from pytorch_lightning.callbacks import (
     LearningRateMonitor,
     ModelCheckpoint,
 )
-from pytorch_lightning.loggers import WandbLogger
 
-from diffcsp.common.utils import log_hyperparameters, PROJECT_ROOT
+from diffcsp.common.utils import log_hyperparameters, PROJECT_ROOT, USE_WANDB_LOGGING
 
-import wandb
-
+if USE_WANDB_LOGGING:
+    import wandb
+    from pytorch_lightning.loggers import WandbLogger
 
 
 def build_callbacks(cfg: DictConfig) -> List[Callback]:
@@ -35,27 +35,20 @@ def build_callbacks(cfg: DictConfig) -> List[Callback]:
             )
         )
 
-    if "early_stopping" in cfg.train:
-        hydra.utils.log.info("Adding callback <EarlyStopping>")
-        callbacks.append(
-            EarlyStopping(
-                monitor=cfg.train.monitor_metric,
-                mode=cfg.train.monitor_metric_mode,
-                patience=cfg.train.early_stopping.patience,
-                verbose=cfg.train.early_stopping.verbose,
-            )
-        )
-
     if "model_checkpoints" in cfg.train:
         hydra.utils.log.info("Adding callback <ModelCheckpoint>")
         callbacks.append(
             ModelCheckpoint(
-                dirpath=Path(HydraConfig.get().run.dir),
+                dirpath=Path(HydraConfig.get().runtime.output_dir),
                 monitor=cfg.train.monitor_metric,
                 mode=cfg.train.monitor_metric_mode,
+                monitor='epoch',    # monitor the epoch number
+                mode='max',  
                 save_top_k=cfg.train.model_checkpoints.save_top_k,
                 verbose=cfg.train.model_checkpoints.verbose,
                 save_last=cfg.train.model_checkpoints.save_last,
+                every_n_epochs=cfg.train.model_checkpoints.every_n_epochs,
+                save_on_train_epoch_end=cfg.train.model_checkpoints.save_on_train_epoch_end,
             )
         )
 
@@ -86,7 +79,7 @@ def run(cfg: DictConfig) -> None:
         cfg.logging.wandb.mode = "offline"
 
     # Hydra run directory
-    hydra_dir = Path(HydraConfig.get().run.dir)
+    hydra_dir = Path(HydraConfig.get().runtime.output_dir)
 
     # Instantiate datamodule
     hydra.utils.log.info(f"Instantiating <{cfg.data.datamodule._target_}>")
@@ -104,19 +97,12 @@ def run(cfg: DictConfig) -> None:
         _recursive_=False,
     )
 
-    # Pass scaler from datamodule to model
-    # hydra.utils.log.info(f"Passing scaler from datamodule to model <{datamodule.scaler}>")
-    # if datamodule.scaler is not None:
-    #     model.lattice_scaler = datamodule.lattice_scaler.copy()
-    #     model.scaler = datamodule.scaler.copy()
-    # torch.save(datamodule.lattice_scaler, hydra_dir / 'lattice_scaler.pt')
-    # torch.save(datamodule.scaler, hydra_dir / 'prop_scaler.pt')
     # Instantiate the callbacks
     callbacks: List[Callback] = build_callbacks(cfg=cfg)
 
     # Logger instantiation/configuration
     wandb_logger = None
-    if "wandb" in cfg.logging:
+    if "wandb" in cfg.logging and USE_WANDB_LOGGING:
         hydra.utils.log.info("Instantiating <WandbLogger>")
         wandb_config = cfg.logging.wandb
         wandb_logger = WandbLogger(
@@ -139,10 +125,10 @@ def run(cfg: DictConfig) -> None:
     ckpts = list(hydra_dir.glob('*.ckpt'))
     if len(ckpts) > 0:
         ckpt_epochs = np.array([int(ckpt.parts[-1].split('-')[0].split('=')[1]) for ckpt in ckpts])
-        ckpt = str(ckpts[ckpt_epochs.argsort()[-1]])
-        hydra.utils.log.info(f"found checkpoint: {ckpt}")
+        ckpt_path = str(ckpts[ckpt_epochs.argsort()[-1]])
+        hydra.utils.log.info(f"found checkpoint: {ckpt_path}")
     else:
-        ckpt = None
+        ckpt_path = None
           
     hydra.utils.log.info("Instantiating the Trainer")
     trainer = pl.Trainer(
@@ -151,25 +137,23 @@ def run(cfg: DictConfig) -> None:
         callbacks=callbacks,
         deterministic=cfg.train.deterministic,
         check_val_every_n_epoch=cfg.logging.val_check_interval,
-        progress_bar_refresh_rate=cfg.logging.progress_bar_refresh_rate,
-        resume_from_checkpoint=ckpt,
         **cfg.train.pl_trainer,
     )
 
     log_hyperparameters(trainer=trainer, model=model, cfg=cfg)
 
     hydra.utils.log.info("Starting training!")
-    trainer.fit(model=model, datamodule=datamodule)
+    trainer.fit(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
 
-    hydra.utils.log.info("Starting testing!")
-    trainer.test(datamodule=datamodule)
+    # hydra.utils.log.info("Starting testing!")
+    # trainer.test(datamodule=datamodule)
 
     # Logger closing to release resources/avoid multi-run conflicts
     if wandb_logger is not None:
         wandb_logger.experiment.finish()
 
 
-@hydra.main(config_path=str(PROJECT_ROOT / "conf"), config_name="default")
+@hydra.main(config_path=str(PROJECT_ROOT / "conf"), config_name="default", version_base="1.1")
 def main(cfg: omegaconf.DictConfig):
     run(cfg)
 

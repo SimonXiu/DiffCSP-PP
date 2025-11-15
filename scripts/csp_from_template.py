@@ -29,7 +29,6 @@ from scipy.spatial.distance import cdist
 import numpy as np
 import pandas as pd
 
-import pdb
 
 
 props = pd.read_csv('./refinement/data/elem_prop.csv').values[:,1:].astype(np.float32)
@@ -274,11 +273,11 @@ def main(args):
 
     torch.save({
         'eval_setting': args,
-        'frac_coords': frac_coords.reshape(-1,1,3),
-        'num_atoms': num_atoms.reshape(-1,1),
-        'atom_types': atom_types.reshape(-1,1),
-        'lengths': lengths.reshape(-1,1,3),
-        'angles': angles.reshape(-1,1,3),
+        'frac_coords': frac_coords.reshape(1,-1,3),
+        'num_atoms': num_atoms.reshape(1,-1),
+        'atom_types': atom_types.reshape(1,-1),
+        'lengths': lengths.reshape(1,-1,3),
+        'angles': angles.reshape(1,-1,3),
     }, model_path / gen_out_name)
 
 

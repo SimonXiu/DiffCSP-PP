@@ -4,8 +4,19 @@ Official Implementation of Space Group Constrained Crystal Generation (DiffCSP++
 
 ### Setup
 
+Complete `.env` with the following correctly filled out
 ```
-bash setup/setup.sh
+PROJECT_ROOT="${THIS_FOLDER}"
+HYDRA_JOBS="${THIS_FOLDER}/results"
+WANDB_DIR="${THIS_FOLDER}"
+USE_WANDB_LOGGING=1
+```
+
+One can specifiy `USE_WANDB_LOGGING=0` to disable wandb.
+
+```
+micromamba env create -f environment.yml
+micromamba activate diffcsp_pp
 ```
 
 ### Training
@@ -22,14 +33,14 @@ For the Ab Initio Generation task
 python diffcsp/run.py data=<dataset> model=diffusion_w_type expname=<expname>
 ```
 
-The ``<dataset>`` tag can be selected from perov_5, mp_20, mpts_52 and carbon_24. Pre-trained checkpoints are provided [here](https://drive.google.com/drive/folders/1FQ_b6CE09KtyGaU_r6uO8_I5JhrQmUFB?usp=sharing).
+The ``<dataset>`` tag can be selected from perov_5, mp_20, mpts_52 and carbon_24. Support for the alex_mp_20 dataset can be added by following the extension instructions available in this [repository](https://github.com/omri1348/SGFM/blob/main/data/alex_mp_20/README.md). Pre-trained checkpoints are provided [here](https://drive.google.com/drive/folders/1FQ_b6CE09KtyGaU_r6uO8_I5JhrQmUFB?usp=sharing).
 
 ### Evaluation
 
 #### Crystal Structure Prediction
 
 ```
-python scripts/evaluate.py --model_path <model_path> --dataset <dataset> with GT Wyckoff positions
+python scripts/evaluate.py --model_path <model_path> --dataset <dataset> # with GT Wyckoff positions
 python script/csp_from_template.py --model_path <csp model> --csv_path <path containing *_comp_fps.csv> --finder_model_path <CSPML model> # with CSPML templates
 python scripts/compute_metrics.py --root_path <model_path> --tasks csp --gt_file data/<dataset>/test.csv 
 ```
