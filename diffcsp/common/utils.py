@@ -95,3 +95,5 @@ assert (
 ), "You must configure the PROJECT_ROOT environment variable in a .env file!"
 
 os.chdir(PROJECT_ROOT)
+
+USE_WANDB_LOGGING = get_env("USE_WANDB_LOGGING", default=0)

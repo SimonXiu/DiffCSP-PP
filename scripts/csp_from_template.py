@@ -29,7 +29,6 @@ from scipy.spatial.distance import cdist
 import numpy as np
 import pandas as pd
 
-import pdb
 
 
 props = pd.read_csv('./refinement/data/elem_prop.csv').values[:,1:].astype(np.float32)
