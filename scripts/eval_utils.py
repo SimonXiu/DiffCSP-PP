@@ -34,12 +34,14 @@ recommand_step_lr = {
         "perov_5": 5e-7,
         "carbon_24": 5e-6,
         "mp_20": 1e-5,
-        "mpts_52": 1e-5
+        "mpts_52": 1e-5,
+        "alex_mp_20": 1e-5,
     },
     'gen':{
         "perov_5": 1e-6,
         "carbon_24": 1e-5,
-        "mp_20": 5e-6
+        "mp_20": 5e-6,
+        "alex_mp_20": 1e-5,
     },
 }
 
