@@ -12,7 +12,7 @@ Training CSPML models
 
 ```
 # Data extraction
-python training_scripts/pair_generate.py --raw_data_dir <path containing raw data> --fp_data_dir <output path to save fingerprints>
+python training_scripts/pair_generate.py --raw_data_dir <path containing raw data (train/val/test csv files)> --fp_data_dir <output path to save fingerprints>
 
 # Training
 python training_scripts/train_cspml.py --fp_data_dir <path containing fingerprints> --save_dir <CSPML model dir>

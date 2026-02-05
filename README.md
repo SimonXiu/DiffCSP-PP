@@ -1,6 +1,10 @@
-## DiffCSP++
+## Space Group Constrained Crystal Generation [ICLR 2024]
 
-Official Implementation of Space Group Constrained Crystal Generation (DiffCSP++).
+Implementation codes for Space Group Constrained Crystal Generation (DiffCSP++).
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/jiaor17/DiffCSP-PP/blob/main/LICENSE)   [**[Paper]**](https://openreview.net/pdf?id=jkvZ7v4OmP)
+
+![Overview](assets/overview.png "Overview")
 
 ### Setup
 
@@ -52,7 +56,7 @@ python scripts/generation.py --model_path <model_path> --dataset <dataset>
 python scripts/compute_metrics.py --root_path <model_path> --tasks gen --gt_file data/<dataset>/test.csv
 ```
 
-### Sample from pre-defined symmetries
+### Sampling APIs for pre-defined symmetries
 
 One can sample structures given the symmetry information by the following codes:
 
@@ -92,3 +96,29 @@ python scripts/sample.py --model_path <model_path> --save_path <save_path> --jso
 ```
 
 Notably, the `atom_types` parameter is not required if a model for ab initio generation is used.
+
+
+## Acknowledgments
+
+This codebase is mainly built upon [CDVAE](https://github.com/txie-93/cdvae) and [DiffCSP](https://github.com/jiaor17/DiffCSP). For the datasets, Perov-5, Carbon-24 and MP-20 are from [CDVAE](https://github.com/txie-93/cdvae), and MPTS-52 is collected from its original [codebase](https://github.com/sparks-baird/mp-time-split).
+
+## Citation
+
+Please consider citing our work if you find it helpful:
+
+```
+@inproceedings{
+jiao2024space,
+title={Space Group Constrained Crystal Generation},
+author={Rui Jiao and Wenbing Huang and Yu Liu and Deli Zhao and Yang Liu},
+booktitle={The Twelfth International Conference on Learning Representations},
+year={2024},
+url={https://openreview.net/forum?id=jkvZ7v4OmP}
+}
+```
+
+## Contact
+
+If you have any questions, feel free to reach us at:
+
+Rui Jiao: [jiaor21@mails.tsinghua.edu.cn](mailto:jiaor21@mails.tsinghua.edu.cn)
